@@ -32,6 +32,9 @@ MAX_INSERTS_PER_RUN = int(os.environ.get("MAX_INSERTS_PER_RUN", "150"))
 # Ignore anything uploaded before this (ISO date). Matches the Pinchflat cutoff.
 CUTOFF = os.environ.get("CUTOFF_DATE", "2026-08-15")
 
+# Titles matching this are never added, whatever the per-source regex says.
+EXCLUDE = re.compile(r"(?i)first 15 minutes|full match|watch live|press conference")
+
 
 def client():
     missing = [v for v in ("YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN") if not os.environ.get(v)]
@@ -89,6 +92,9 @@ def main():
         try:
             for vid, title, published in playlist_items(yt, pid):
                 if rx and not rx.search(title):
+                    skipped += 1
+                    continue
+                if EXCLUDE.search(title):
                     skipped += 1
                     continue
                 if published and published[:10] < CUTOFF:
