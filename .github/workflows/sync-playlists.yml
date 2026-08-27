@@ -1,0 +1,29 @@
+name: Sync football highlight playlists
+
+on:
+  schedule:
+    - cron: "37 8 * * *"   # 08:37 UTC daily (~03:37 America/Chicago)
+  workflow_dispatch:        # lets you run it by hand from the Actions tab
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Sync playlists
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          YT_TARGET_PLAYLIST: ${{ secrets.YT_TARGET_PLAYLIST }}
+          CUTOFF_DATE: "2026-08-15"
+          MAX_INSERTS_PER_RUN: "150"
+        run: python sync_playlists.py
