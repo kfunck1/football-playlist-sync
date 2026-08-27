@@ -1,3 +1,6 @@
 client_secret.json
 token.json
 __pycache__/
+
+list_playlists.py
+make_playlist.py

@@ -68,9 +68,14 @@ def playlist_items(yt, playlist_id):
 
 
 def main():
-    target = os.environ.get("YT_TARGET_PLAYLIST")
-    if not target:
+    raw = (os.environ.get("YT_TARGET_PLAYLIST") or "").strip()
+    if not raw:
         sys.exit("Missing required secret: YT_TARGET_PLAYLIST")
+    m = re.search(r"((?:PL|UU|LL|FL|OL)[A-Za-z0-9_-]{10,})", raw)
+    if not m:
+        sys.exit("YT_TARGET_PLAYLIST holds no playlist id: %d chars, starts %r" % (len(raw), raw[:6]))
+    target = m.group(1)
+    log.info("resolved target playlist id: %s", target)
 
     yt = client()
 
