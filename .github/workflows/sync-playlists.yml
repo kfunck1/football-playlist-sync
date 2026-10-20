@@ -2,8 +2,11 @@ name: Sync football highlight playlists
 
 on:
   schedule:
-    - cron: "37 8 * * *"   # 08:37 UTC daily (~03:37 America/Chicago)
-  workflow_dispatch:        # lets you run it by hand from the Actions tab
+    - cron: "37 */2 * * *"   # every 2 hours at :37 UTC (12 runs a day)
+  workflow_dispatch:         # lets you run it by hand from the Actions tab
+
+permissions:
+  contents: write            # needed for the keep-alive commit below
 
 jobs:
   sync:
@@ -27,3 +30,17 @@ jobs:
           CUTOFF_DATE: "2026-08-15"
           MAX_INSERTS_PER_RUN: "150"
         run: python sync_playlists.py
+
+      # Keeps the repo "active" so GitHub never auto-disables the schedule.
+      # Writes today's date to a file; git only commits when the date changes,
+      # so this is one tiny commit per day, not one per run.
+      - name: Keep the schedule alive
+        if: always()
+        run: |
+          date -u +"%Y-%m-%d" > .last-run
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .last-run
+          git diff --cached --quiet && exit 0
+          git commit -m "keep-alive: ran $(cat .last-run)"
+          git push
